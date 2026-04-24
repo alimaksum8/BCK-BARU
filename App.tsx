@@ -582,9 +582,8 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
                   display: block !important;
                   white-space: nowrap !important;
                 }
-                .print-header h3 { margin-left: 1cm !important; }
+                .print-header h3 { margin-left: 3cm !important; }
                 .print-header p { margin-left: 2cm !important; }
-                .print-footer div:last-child { margin-left: 15cm !important; }
                 table { border-collapse: collapse; width: 100% !important; border: 1pt solid black !important; margin: 0 auto !important; table-layout: fixed; }
                 th, td { border: 0.5pt solid black !important; padding: 1px !important; font-size: 5pt !important; text-align: center; overflow: hidden; vertical-align: middle; white-space: nowrap; }
                 th { background-color: #f3f4f6 !important; font-weight: bold; -webkit-print-color-adjust: exact; }
@@ -667,7 +666,7 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
               </tbody>
             </table>
 
-            <div className="mt-8 flex px-2 text-[9px] w-full print-footer">
+            <div className="mt-8 flex justify-between px-2 text-[9px] w-full">
               <div className="text-center w-64">
                 <p>Mengetahui,</p>
                 <p className="font-bold mt-1">Pengawas Madrasah</p>
