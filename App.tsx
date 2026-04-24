@@ -552,10 +552,10 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
       {isReportVisible && generatedReport && (
         <div className="hidden print:block" id="print-area">
           <div className="border-none w-full">
-            <div className="print-header">
-              <h2 className="text-xl font-bold uppercase tracking-tight">REKAPITULASI KEHADIRAN FINGERPRINT</h2>
-              <h3 className="text-lg font-semibold uppercase text-gray-700">{generatedReport.madrasahName}</h3>
-              <p className="text-[10px] mt-2 italic">Bulan: <strong>{generatedReport.monthName} {generatedReport.year}</strong> | Jam Kerja: Datang &lt; 07:00:00, Pulang &lt; 13:00:00</p>
+            <div className="print-header flex flex-col items-center justify-center w-full">
+              <h2 className="text-xl font-bold uppercase tracking-tight text-center">REKAPITULASI KEHADIRAN FINGERPRINT</h2>
+              <h3 className="text-lg font-semibold uppercase text-gray-700 text-center">{generatedReport.madrasahName}</h3>
+              <p className="text-[10px] mt-2 italic text-center">Bulan: <strong>{generatedReport.monthName} {generatedReport.year}</strong> | Jam Kerja: Datang &lt; 07:00:00, Pulang &lt; 13:00:00</p>
             </div>
 
             <style>{`
@@ -564,16 +564,20 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
                 body { margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact; }
                 #print-area { width: 100% !important; margin: 0 !important; padding: 0 !important; display: block !important; }
                 .print-header { 
-                  display: block !important; 
+                  display: flex !important; 
+                  flex-direction: column !important;
+                  align-items: center !important;
+                  justify-content: center !important;
                   width: 100% !important; 
                   margin: 0 auto 20pt auto !important; 
                   text-align: center !important; 
                   padding: 0 !important;
                 }
                 .print-header h2, .print-header h3, .print-header p { 
-                  margin: 2pt 0 !important; 
+                  margin: 1pt 0 !important; 
                   padding: 0 !important;
-                  width: 100% !important; 
+                  width: auto !important; 
+                  max-width: 100% !important;
                   text-align: center !important;
                   display: block !important;
                 }
