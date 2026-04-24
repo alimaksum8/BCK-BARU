@@ -1180,39 +1180,53 @@ const App: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
     setIsScanning(true);
+    
+    const readFile = (file: File, type: 'array' | 'dataurl'): Promise<string | ArrayBuffer | null | undefined> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result);
+        reader.onerror = (e) => reject(e);
+        if (type === 'array') reader.readAsArrayBuffer(file);
+        else reader.readAsDataURL(file);
+      });
+    };
+
     try {
       if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.name.endsWith('.xlsx')) {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const result = await readFile(file, 'array');
+        if (result) {
+          const data = new Uint8Array(result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: 'array' });
           const csvText = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]]);
           const results = await scanCalendar({ extractedText: csvText });
-          if (results) {
+          if (results && results.length > 0) {
             const sorted = results.sort((a: any, b: any) => a.date.localeCompare(b.date));
             setImportedKaldik(sorted);
             showToast("Kaldik diimpor", "success");
+          } else {
+            showToast("Tidak ada data kaldik ditemukan", "error");
           }
-          setIsScanning(false);
-        };
-        reader.readAsArrayBuffer(file);
+        }
       } else {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const base64 = (e.target?.result as string).split(',')[1];
+        const result = await readFile(file, 'dataurl');
+        if (result) {
+          const base64 = (result as string).split(',')[1];
           const results = await scanCalendar({ fileBase64: base64, mimeType: file.type });
-          if (results) {
+          if (results && results.length > 0) {
             const sorted = results.sort((a: any, b: any) => a.date.localeCompare(b.date));
             setImportedKaldik(sorted);
             showToast("Kaldik diproses", "success");
+          } else {
+            showToast("Tidak ada data kaldik ditemukan", "error");
           }
-          setIsScanning(false);
-        };
-        reader.readAsDataURL(file);
+        }
       }
     } catch (err) { 
+      console.error("Error processing file:", err);
+      showToast("Gagal memproses file", "error");
+    } finally {
       setIsScanning(false); 
-      showToast("Gagal memproses", "error");
+      if (event.target) event.target.value = ''; // Reset input to allow re-upload of same file
     }
   };
 
@@ -1380,7 +1394,21 @@ const App: React.FC = () => {
             <button onClick={() => window.print()} className="flex items-center space-x-2 bg-gray-800 text-white px-5 py-2.5 rounded-xl shadow-md hover:bg-black transition">
               <Printer size={18} /><span>Cetak PDF</span>
             </button>
-            <button onClick={async () => { setAiLoading(true); const ideas = await suggestActivities(profile.jabatan, profile.school); if (ideas) setSuggestions(ideas); setAiLoading(false); }} disabled={aiLoading} className="flex items-center space-x-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transition disabled:opacity-50">
+            <button 
+              onClick={async () => { 
+                setAiLoading(true); 
+                try {
+                  const ideas = await suggestActivities(profile.jabatan, profile.school); 
+                  if (ideas) setSuggestions(ideas); 
+                } catch (err) {
+                  showToast("Gagal mengambil ide AI", "error");
+                } finally {
+                  setAiLoading(false); 
+                }
+              }} 
+              disabled={aiLoading} 
+              className="flex items-center space-x-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transition disabled:opacity-50"
+            >
               <Sparkles size={18} /><span>{aiLoading ? 'Berpikir...' : 'Ide AI'}</span>
             </button>
           </div>
@@ -1443,7 +1471,25 @@ const App: React.FC = () => {
                           <div className="absolute right-0.5 top-1/2 -translate-y-1/2 flex gap-0.5 opacity-0 group-hover/row:opacity-100 transition no-print z-10">
                             {type === 'kepala' && <button onClick={() => addSubActivity(act.id)} title="Tambah Baris" className="p-0.5 bg-green-500 text-white rounded shadow-sm hover:bg-green-600 transition"><Plus size={8} /></button>}
                             <button onClick={() => { setDbSelectionContext({ parentId: act.id }); setOpenDbRowId(openDbRowId === act.id ? null : act.id); }} title="Pilih dari Database" className={`p-0.5 bg-white rounded border shadow-sm ${openDbRowId === act.id ? 'text-blue-600 bg-blue-50 border-blue-200' : 'text-blue-500'} hover:bg-blue-50`}><Database size={8} /></button>
-                            {act.description && <button onClick={() => { setAiLoading(true); refineActivity(act.description).then(res => { updateActivity(act.id, { description: res }); setAiLoading(false); }); }} title="Perbaiki Kalimat (AI)" className="p-0.5 bg-white rounded border shadow-sm text-indigo-500 hover:bg-indigo-50"><Sparkles size={8} /></button>}
+                            {act.description && (
+                              <button 
+                                onClick={async () => { 
+                                  setAiLoading(true); 
+                                  try {
+                                    const res = await refineActivity(act.description);
+                                    updateActivity(act.id, { description: res }); 
+                                  } catch (err) {
+                                    showToast("Gagal memperbaiki kalimat", "error");
+                                  } finally {
+                                    setAiLoading(false); 
+                                  }
+                                }} 
+                                title="Perbaiki Kalimat (AI)" 
+                                className="p-0.5 bg-white rounded border shadow-sm text-indigo-500 hover:bg-indigo-50"
+                              >
+                                <Sparkles size={8} />
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -1458,7 +1504,25 @@ const App: React.FC = () => {
                           />
                           <div className="absolute right-0.5 top-1/2 -translate-y-1/2 flex gap-0.5 opacity-0 group-hover/sub:opacity-100 transition no-print z-10">
                             <button onClick={() => { setDbSelectionContext({ parentId: act.id, subId: sub.id }); setOpenDbRowId(openDbRowId === sub.id ? null : sub.id); }} title="Pilih dari Database" className={`p-0.5 bg-white rounded border shadow-sm ${openDbRowId === sub.id ? 'text-blue-600 bg-blue-50 border-blue-200' : 'text-blue-500'} hover:bg-blue-50`}><Database size={8} /></button>
-                            {sub.description && <button onClick={() => { setAiLoading(true); refineActivity(sub.description).then(res => { updateSubActivity(act.id, sub.id, { description: res }); setAiLoading(false); }); }} title="Perbaiki Kalimat (AI)" className="p-0.5 bg-white rounded border shadow-sm text-indigo-500 hover:bg-indigo-50"><Sparkles size={8} /></button>}
+                            {sub.description && (
+                              <button 
+                                onClick={async () => { 
+                                  setAiLoading(true); 
+                                  try {
+                                    const res = await refineActivity(sub.description);
+                                    updateSubActivity(act.id, sub.id, { description: res }); 
+                                  } catch (err) {
+                                    showToast("Gagal memperbaiki kalimat", "error");
+                                  } finally {
+                                    setAiLoading(false); 
+                                  }
+                                }} 
+                                title="Perbaiki Kalimat (AI)" 
+                                className="p-0.5 bg-white rounded border shadow-sm text-indigo-500 hover:bg-indigo-50"
+                              >
+                                <Sparkles size={8} />
+                              </button>
+                            )}
                             {type === 'kepala' && <button onClick={() => removeSubActivity(act.id, sub.id)} title="Hapus Baris" className="p-0.5 bg-red-500 text-white rounded shadow-sm hover:bg-red-600 transition"><Trash size={8} /></button>}
                           </div>
                         </div>
