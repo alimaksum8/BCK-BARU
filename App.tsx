@@ -568,8 +568,8 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
                   flex-direction: column !important;
                   align-items: center !important;
                   justify-content: center !important;
-                  width: 100% !important; 
-                  margin: 0 auto 20pt auto !important; 
+                  width: calc(100% - 10cm) !important; 
+                  margin: 0 0 20pt 10cm !important; 
                   text-align: center !important; 
                   padding: 0 !important;
                 }
