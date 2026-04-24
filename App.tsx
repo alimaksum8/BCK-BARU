@@ -551,164 +551,106 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
 
       {isReportVisible && generatedReport && (
         <div className="hidden print:block" id="print-area">
-          <div className="print-content-wrapper">
+          <div className="border-none w-full">
             <div className="print-header">
-              <h2 className="title-main">REKAPITULASI KEHADIRAN FINGERPRINT</h2>
-              <h3 className="title-sub">{generatedReport.madrasahName}</h3>
-              <p className="title-desc">Bulan: <strong>{generatedReport.monthName} {generatedReport.year}</strong> | Jam Kerja: Datang &lt; 07:00:00, Pulang &lt; 13:00:00</p>
+              <h2 className="text-xl font-bold uppercase tracking-tight">REKAPITULASI KEHADIRAN FINGERPRINT</h2>
+              <h3 className="text-lg font-semibold uppercase text-gray-700">{generatedReport.madrasahName}</h3>
+              <p className="text-[10px] mt-2 italic">Bulan: <strong>{generatedReport.monthName} {generatedReport.year}</strong> | Jam Kerja: Datang &lt; 07:00:00, Pulang &lt; 13:00:00</p>
             </div>
 
             <style>{`
               @media print {
-                @page { 
-                  size: landscape; 
-                  margin: 1.0cm !important; 
-                }
-                * { 
-                  box-sizing: border-box !important; 
-                  -webkit-print-color-adjust: exact !important; 
-                  print-color-adjust: exact !important;
-                }
-                body { 
-                  margin: 0 !important; 
-                  padding: 0 !important; 
-                  background: white !important; 
-                  font-family: Arial, Helvetica, sans-serif !important;
-                  width: 100% !important;
-                }
-                #print-area { 
-                  width: 100% !important; 
-                  margin: 0 !important; 
-                  padding: 0 !important; 
-                  display: block !important;
-                }
-                .print-content-wrapper { 
-                  width: 100% !important; 
-                  margin: 0 auto !important; 
-                  padding: 0 !important; 
-                  display: block !important;
-                }
+                @page { size: landscape; margin: 0.5cm !important; }
+                body { margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact; }
+                #print-area { width: 100% !important; margin: 0 !important; padding: 0 !important; display: block !important; }
                 .print-header { 
+                  display: block !important; 
                   width: 100% !important; 
-                  margin: 0 0 25pt 0 !important; 
+                  margin: 0 auto 20pt auto !important; 
                   text-align: center !important; 
-                  display: flex !important;
-                  flex-direction: column !important;
-                  align-items: center !important;
-                  justify-content: center !important;
-                }
-                .print-header h2.title-main { 
-                  font-size: 16pt !important; 
-                  font-weight: 800 !important; 
-                  text-transform: uppercase !important;
-                  margin: 0 0 5pt 0 !important; 
                   padding: 0 !important;
-                  width: 100% !important;
-                  text-align: center !important;
                 }
-                .print-header h3.title-sub { 
-                  font-size: 13pt !important; 
-                  font-weight: 700 !important; 
-                  text-transform: uppercase !important;
-                  color: #111827 !important;
-                  margin: 0 0 8pt 0 !important; 
+                .print-header h2, .print-header h3, .print-header p { 
+                  margin: 2pt 0 !important; 
                   padding: 0 !important;
-                  width: 100% !important;
-                  text-align: center !important;
-                }
-                .print-header p.title-desc { 
-                  font-size: 10pt !important; 
-                  font-style: italic !important;
-                  margin: 0 !important; 
-                  padding: 0 !important;
-                  width: 100% !important;
-                  text-align: center !important;
-                  color: #374151 !important;
-                }
-                table { 
-                  border-collapse: collapse !important; 
                   width: 100% !important; 
-                  border: 1pt solid black !important; 
-                  margin: 0 auto !important; 
-                  table-layout: fixed !important; 
-                }
-                th, td { 
-                  border: 0.5pt solid black !important; 
-                  padding: 2px 0 !important; 
-                  font-size: 5.5pt !important; 
-                  text-align: center !important; 
-                  overflow: hidden !important; 
-                  vertical-align: middle !important; 
-                  white-space: nowrap !important;
-                }
-                th { 
-                  background-color: #f3f4f6 !important; 
-                  font-weight: bold !important; 
-                  font-size: 5pt !important;
-                }
-                .bg-sunday { background-color: #fee2e2 !important; color: #dc2626 !important; font-weight: bold !important; }
-                .text-late { color: #dc2626 !important; font-weight: bold !important; }
-                .text-absent { font-weight: bold !important; color: #dc2626 !important; }
-                
-                .signature-section {
-                  margin-top: 40pt !important;
-                  width: 100% !important;
-                  display: flex !important;
-                  flex-direction: row !important;
-                  justify-content: space-between !important;
-                  padding: 0 50pt !important;
-                  page-break-inside: avoid !important;
-                }
-                .sig-box {
                   text-align: center !important;
-                  width: 200pt !important;
+                  display: block !important;
                 }
-                .sig-box p { margin: 2pt 0 !important; font-size: 10pt !important; }
-                .sig-name { margin-top: 55pt !important; font-weight: bold !important; text-decoration: underline !important; text-transform: uppercase !important; font-size: 10.5pt !important; }
-                .sig-nip { font-size: 9.5pt !important; }
+                table { border-collapse: collapse; width: 100% !important; border: 1pt solid black !important; margin: 0 auto !important; table-layout: fixed; }
+                th, td { border: 0.5pt solid black !important; padding: 1px !important; font-size: 5pt !important; text-align: center; overflow: hidden; vertical-align: middle; white-space: nowrap; }
+                th { background-color: #f3f4f6 !important; font-weight: bold; -webkit-print-color-adjust: exact; }
+                .bg-sunday { background-color: #fee2e2 !important; color: #dc2626 !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
+                .bg-off { background-color: #f9fafb !important; color: #9ca3af !important; -webkit-print-color-adjust: exact; }
+                .col-no { width: 20pt; }
+                .col-name { width: 90pt; text-align: left !important; padding-left: 3pt !important; font-weight: bold; }
+                .col-time { width: 35pt; font-family: monospace; color: #444; font-size: 4.5pt !important; }
+                .col-day { width: 18pt; font-size: 4.5pt !important; }
+                .col-sum { width: 15pt; font-weight: bold; }
               }
             `}</style>
 
             <table className="w-full">
               <thead>
                 <tr>
-                  <th rowSpan={2} style={{ width: '25pt' }}>No</th>
-                  <th rowSpan={2} style={{ width: '130pt' }}>Nama Guru / Pegawai</th>
-                  <th rowSpan={2} style={{ width: '38pt' }}>Ref. JM</th>
-                  <th rowSpan={2} style={{ width: '38pt' }}>Ref. JP</th>
-                  {Array.from({length: generatedReport.daysCount}).map((_, i) => (
-                    <th key={i} colSpan={2} style={{ width: '26pt' }}>{i + 1}</th>
-                  ))}
-                  <th rowSpan={2} style={{ width: '22pt' }}>Hdr</th>
-                  <th rowSpan={2} style={{ width: '22pt' }}>Ijn</th>
-                  <th rowSpan={2} style={{ width: '22pt' }}>Alp</th>
+                  <th rowSpan={2} className="col-no">No</th>
+                  <th rowSpan={2} className="col-name">Nama Guru / Pegawai</th>
+                  <th rowSpan={2} className="col-time">Ref. JM</th>
+                  <th rowSpan={2} className="col-time">Ref. JP</th>
+                  {Array.from({length: generatedReport.daysCount}, (_, i) => {
+                    const record = Object.values(generatedReport.data)[0]?.[i];
+                    const shouldConsolidate = record?.shouldConsolidate;
+                    return (
+                      <th 
+                        key={i} 
+                        rowSpan={shouldConsolidate ? 2 : 1} 
+                        colSpan={shouldConsolidate ? 1 : 2} 
+                        className="col-day" 
+                        style={{ minWidth: shouldConsolidate ? '18pt' : '36pt' }}
+                      >
+                        {i+1}
+                      </th>
+                    );
+                  })}
+                  <th rowSpan={2} className="col-sum">Hdr</th>
+                  <th rowSpan={2} className="col-sum">Ijn</th>
+                  <th rowSpan={2} className="col-sum">Alp</th>
                 </tr>
                 <tr>
-                  {Array.from({length: generatedReport.daysCount}).map((_, i) => (
-                    <React.Fragment key={i}>
-                      <th style={{ fontSize: '3.5pt' }}>JD</th>
-                      <th style={{ fontSize: '3.5pt' }}>JP</th>
-                    </React.Fragment>
-                  ))}
+                  {Array.from({length: generatedReport.daysCount}, (_, i) => {
+                    const record = Object.values(generatedReport.data)[0]?.[i];
+                    if (record?.shouldConsolidate) return null;
+                    return (
+                      <React.Fragment key={i}>
+                        <th className="font-bold bg-gray-100" style={{ border: '0.5pt solid black', fontSize: '5pt' }}>JD</th>
+                        <th className="font-bold bg-gray-100" style={{ border: '0.5pt solid black', fontSize: '5pt' }}>JP</th>
+                      </React.Fragment>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
                 {teachers.map((teacher, idx) => {
-                  const teacherLogs = generatedReport.data[teacher.id] || [];
-                  const presentCount = teacherLogs.filter(l => l.hadir).length;
+                  const records = generatedReport.data[teacher.id] || [];
+                  const hadirCount = records.filter(r => r.hadir).length;
                   return (
                     <tr key={teacher.id}>
                       <td>{idx + 1}</td>
-                      <td style={{ textAlign: 'left', paddingLeft: '4px', fontSize: '7.5pt', fontWeight: 'bold' }}>{teacher.name}</td>
-                      <td style={{ color: '#059669', fontWeight: '800' }}>07:00:00</td>
-                      <td style={{ color: '#2563eb', fontWeight: '800' }}>13:00:00</td>
-                      {teacherLogs.map((log, i) => (
-                        <React.Fragment key={i}>
-                          <td className={log.cls}>{log.jd}</td>
-                          <td className={log.cls}>{log.jp}</td>
-                        </React.Fragment>
-                      ))}
-                      <td style={{ fontWeight: 'bold' }}>{presentCount}</td>
+                      <td className="col-name uppercase">{teacher.name}</td>
+                      <td className="col-time">07:00:00</td>
+                      <td className="col-time">13:00:00</td>
+                      {records.map((r, i) => {
+                        if (r.shouldConsolidate) {
+                          return <td key={i} className="bg-sunday" style={{ fontSize: '4.5pt', border: '0.5pt solid black', textAlign: 'center' }}>{r.jd}</td>;
+                        }
+                        return (
+                          <React.Fragment key={i}>
+                            <td className={r.cls} style={{ border: '0.5pt solid black', textAlign: 'center' }}>{r.jd}</td>
+                            <td className={r.cls} style={{ border: '0.5pt solid black', textAlign: 'center' }}>{r.jp}</td>
+                          </React.Fragment>
+                        );
+                      })}
+                      <td className="bg-blue-50/50 font-bold">{hadirCount}</td>
                       <td>0</td>
                       <td>0</td>
                     </tr>
@@ -717,18 +659,20 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
               </tbody>
             </table>
 
-            <div className="signature-section">
-              <div className="sig-box">
+            <div className="mt-8 flex justify-between px-2 text-[9px] w-full">
+              <div className="text-center w-64">
                 <p>Mengetahui,</p>
-                <p className="font-bold">Pengawas Madrasah</p>
-                <div className="sig-name">{profile.supervisorName || '..........................................'}</div>
-                <p className="sig-nip">NIP. {profile.supervisorNip || '..........................................'}</p>
+                <p className="font-bold mt-1">Pengawas Madrasah</p>
+                <div className="h-16"></div>
+                <p className="font-bold underline uppercase">{profile.supervisorName || '..........................................'}</p>
+                <p>NIP. {profile.supervisorNip || '..........................................'}</p>
               </div>
-              <div className="sig-box">
+              <div className="text-center w-64">
                 <p>Ditetapkan di: {profile.location || '....................'}</p>
-                <p className="font-bold">Kepala Madrasah</p>
-                <div className="sig-name">{profile.headmasterName || '..........................................'}</div>
-                <p className="sig-nip">NIP. {profile.headmasterNip || '..........................................'}</p>
+                <p className="font-bold mt-1">Kepala Madrasah</p>
+                <div className="h-16"></div>
+                <p className="font-bold underline uppercase">{profile.headmasterName || '..........................................'}</p>
+                <p>NIP. {profile.headmasterNip || '..........................................'}</p>
               </div>
             </div>
           </div>
@@ -1460,7 +1404,7 @@ const App: React.FC = () => {
             </div>
           </div>
         )}
-        <div id="bck-print-area" className="bg-white shadow-2xl rounded-sm p-4 sm:p-6 border border-gray-200 overflow-visible min-w-full print:p-0 print:shadow-none print:border-none">
+        <div id="print-area" className="bg-white shadow-2xl rounded-sm p-4 sm:p-6 border border-gray-200 overflow-visible min-w-full print:p-0 print:shadow-none print:border-none">
           <div className="text-center font-bold text-xs mb-6 uppercase">
             BUKU CATATAN KINERJA (BCK) {type === 'guru' ? 'GURU' : 'KEPALA'}<br />
             BULAN {currentDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
