@@ -584,17 +584,6 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
                 }
                 .print-header h3 { margin-left: 0.5cm !important; }
                 .print-header p { margin-left: 2cm !important; }
-                .print-footer { 
-                  margin-top: 15pt !important; 
-                  display: flex !important; 
-                }
-                .print-footer .signature-box {
-                  text-align: center !important;
-                  width: 6cm !important;
-                }
-                .print-footer .signature-box:last-child {
-                  margin-left: 10cm !important;
-                }
                 table { border-collapse: collapse; width: 100% !important; border: 1pt solid black !important; margin: 0 auto !important; table-layout: fixed; }
                 th, td { border: 0.5pt solid black !important; padding: 1px !important; font-size: 5pt !important; text-align: center; overflow: hidden; vertical-align: middle; white-space: nowrap; }
                 th { background-color: #f3f4f6 !important; font-weight: bold; -webkit-print-color-adjust: exact; }
@@ -677,15 +666,15 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
               </tbody>
             </table>
 
-            <div className="mt-8 flex px-2 text-[9px] w-full print-footer">
-              <div className="text-center w-64 signature-box">
+            <div className="mt-8 flex justify-between px-2 text-[9px] w-full">
+              <div className="text-center w-64">
                 <p>Mengetahui,</p>
                 <p className="font-bold mt-1">Pengawas Madrasah</p>
                 <div className="h-16"></div>
                 <p className="font-bold underline uppercase">{profile.supervisorName || '..........................................'}</p>
                 <p>NIP. {profile.supervisorNip || '..........................................'}</p>
               </div>
-              <div className="text-center w-64 signature-box">
+              <div className="text-center w-64">
                 <p>Ditetapkan di: {profile.location || '....................'}</p>
                 <p className="font-bold mt-1">Kepala Madrasah</p>
                 <div className="h-16"></div>
