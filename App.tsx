@@ -37,6 +37,7 @@ const STORAGE_KEY_LOGS = 'bck_logs';
 const STORAGE_KEY_KALDIK = 'bck_kaldik_data';
 const STORAGE_KEY_DB = 'bck_activity_db';
 const STORAGE_KEY_QTY_DB = 'bck_quantity_db';
+const STORAGE_KEY_TEACHERS = 'bck_fingerprint_teachers';
 
 const ActivityDbInput = ({ onAdd, placeholder = "Contoh: Mengoreksi hasil ulangan siswa..." }: { onAdd: (item: string) => void, placeholder?: string }) => {
   const [text, setText] = useState('');
@@ -51,9 +52,16 @@ const ActivityDbInput = ({ onAdd, placeholder = "Contoh: Mengoreksi hasil ulanga
   );
 };
 
-const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], importedKaldik: KaldikEvent[], currentDate: Date }> = ({ profile, logs, importedKaldik, currentDate }) => {
-  const [teachers, setTeachers] = useState<{ id: number; name: string; schedule: number[] }[]>([]);
+const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], importedKaldik: KaldikEvent[], currentDate: Date, showToast: (msg: string, type: 'success' | 'error') => void }> = ({ profile, logs, importedKaldik, currentDate, showToast }) => {
+  const [teachers, setTeachers] = useState<{ id: number; name: string; schedule: number[] }[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_TEACHERS);
+    return saved ? JSON.parse(saved) : [];
+  });
   
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_TEACHERS, JSON.stringify(teachers));
+  }, [teachers]);
+
   // Initialize monthPicker from global currentDate
   const initialYear = currentDate.getFullYear();
   const initialMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0');
@@ -63,6 +71,8 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
   const [teacherName, setTeacherName] = useState('');
   const [schedule, setSchedule] = useState({ 1: true, 2: true, 3: true, 4: true, 5: true, 6: true });
   const [isReportVisible, setIsReportVisible] = useState(false);
+  const [isTeacherDbModalOpen, setIsTeacherDbModalOpen] = useState(false);
+  const [editingTeacherId, setEditingTeacherId] = useState<number | null>(null);
   
   // New combined state for generated data to ensure consistency
   const [generatedReport, setGeneratedReport] = useState<{
@@ -74,22 +84,50 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
     daysCount: number;
   } | null>(null);
 
-  const addTeacher = () => {
-    if (!teacherName) return;
+  const addOrUpdateTeacher = () => {
+    if (!teacherName) {
+      showToast("Nama guru tidak boleh kosong", "error");
+      return;
+    }
     const activeSchedule = Object.entries(schedule)
       .filter(([_, active]) => active)
       .map(([day, _]) => parseInt(day));
     
-    if (activeSchedule.length === 0) return;
+    if (activeSchedule.length === 0) {
+      showToast("Minimal satu hari kerja harus dipilih", "error");
+      return;
+    }
 
-    setTeachers([...teachers, { id: Date.now(), name: teacherName, schedule: activeSchedule }]);
+    if (editingTeacherId) {
+      setTeachers(teachers.map(t => t.id === editingTeacherId ? { ...t, name: teacherName, schedule: activeSchedule } : t));
+      setEditingTeacherId(null);
+      showToast("Data guru berhasil diperbarui", "success");
+    } else {
+      setTeachers([...teachers, { id: Date.now(), name: teacherName, schedule: activeSchedule }]);
+      showToast("Guru berhasil ditambahkan", "success");
+    }
+    
     setTeacherName('');
-    setGeneratedReport(null); // Reset preview on change
+    setSchedule({ 1: true, 2: true, 3: true, 4: true, 5: true, 6: true });
+    setGeneratedReport(null); 
   };
 
   const removeTeacher = (id: number) => {
-    setTeachers(teachers.filter(t => t.id !== id));
-    setGeneratedReport(null); // Reset preview on change
+    if (confirm("Hapus data guru ini?")) {
+      setTeachers(teachers.filter(t => t.id !== id));
+      setGeneratedReport(null);
+      showToast("Guru berhasil dihapus", "success");
+    }
+  };
+
+  const startEditTeacher = (t: { id: number; name: string; schedule: number[] }) => {
+    setEditingTeacherId(t.id);
+    setTeacherName(t.name);
+    const newSchedule = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false };
+    t.schedule.forEach(day => {
+      newSchedule[day as keyof typeof newSchedule] = true;
+    });
+    setSchedule(newSchedule);
   };
 
   const getDaysInMonth = (month: number, year: number) => new Date(year, month + 1, 0).getDate();
@@ -247,7 +285,16 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 relative">
+      <div className="max-w-4xl mx-auto mb-4 flex justify-start no-print">
+        <button 
+          onClick={() => setIsTeacherDbModalOpen(true)}
+          className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200 flex items-center gap-2"
+        >
+          <Database size={18} /> Data Base Guru
+        </button>
+      </div>
+
       <div className="max-w-4xl mx-auto bg-white p-6 rounded-3xl shadow-sm border border-gray-100 no-print mb-8">
         <h1 className="text-2xl font-bold mb-6 text-center text-blue-600">Sistem Absensi Fingerprint Madrasah</h1>
         
@@ -276,87 +323,154 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
           </div>
         </div>
 
-        <div className="bg-blue-50/50 p-6 rounded-3xl mb-8 border border-blue-100">
-          <h2 className="font-black text-blue-900 mb-4 flex items-center gap-2">
-            <Users size={20} /> Input Guru & Jadwal Rutin
-          </h2>
-          <div className="flex flex-col md:flex-row gap-3 mb-6">
-            <input 
-              type="text" 
-              placeholder="Nama Guru Lengkap" 
-              className="flex-1 bg-white border border-blue-100 rounded-2xl p-3 focus:ring-2 focus:ring-blue-600 outline-none transition text-sm"
-              value={teacherName}
-              onChange={(e) => setTeacherName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && addTeacher()}
-            />
-            <button 
-              onClick={addTeacher}
-              className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
-            >
-              <Plus size={18} /> Tambah Guru
-            </button>
-          </div>
-          <div className="space-y-3">
-            <span className="text-xs font-black text-blue-800 uppercase tracking-wider">Hari Kerja Aktif:</span>
-            <div className="flex flex-wrap gap-4 pt-1">
-              {[
-                { id: 1, name: 'Senin' },
-                { id: 2, name: 'Selasa' },
-                { id: 3, name: 'Rabu' },
-                { id: 4, name: 'Kamis' },
-                { id: 5, name: 'Jumat' },
-                { id: 6, name: 'Sabtu' },
-              ].map(day => (
-                <label key={day.id} className="flex items-center gap-2 cursor-pointer group">
-                  <input 
-                    type="checkbox" 
-                    checked={(schedule as any)[day.id]} 
-                    onChange={(e) => setSchedule({ ...schedule, [day.id]: e.target.checked })}
-                    className="w-5 h-5 rounded-lg border-blue-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                  />
-                  <span className="text-sm font-semibold text-gray-600 group-hover:text-blue-600 transition">{day.name}</span>
-                </label>
-              ))}
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between p-6 bg-blue-50/50 rounded-3xl border border-blue-100 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-blue-600/10 text-blue-600 rounded-2xl flex items-center justify-center">
+              <Users size={24} />
+            </div>
+            <div>
+              <p className="text-sm font-black text-blue-900 uppercase tracking-wider">Status Guru</p>
+              <p className="text-xs text-blue-600 font-bold">{teachers.length} Guru terdaftar di database</p>
             </div>
           </div>
-        </div>
-
-        <div className="mb-8 space-y-2">
-          <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider ml-1">Daftar Guru ({teachers.length})</h3>
-          <div className="max-h-60 overflow-y-auto border border-gray-100 p-2 rounded-2xl bg-gray-50/50 space-y-2 custom-scrollbar">
-            {teachers.length === 0 ? (
-              <p className="text-center text-gray-400 py-8 italic text-sm">Belum ada daftar guru</p>
-            ) : (
-              teachers.map(t => (
-                <div key={t.id} className="flex justify-between items-center bg-white border border-gray-100 p-3 rounded-xl shadow-sm text-sm group animate-in slide-in-from-left-2 transition-all">
-                  <span className="font-bold text-gray-700">{t.name}</span>
-                  <button onClick={() => removeTeacher(t.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition">
-                    <Trash size={16} />
-                  </button>
-                </div>
-              ))
+          <div className="flex gap-3 w-full sm:w-auto">
+            <button 
+              onClick={handleGenerate}
+              className="flex-1 sm:flex-none bg-blue-600 text-white px-8 py-4 rounded-2xl font-black hover:bg-blue-700 transition shadow-xl shadow-blue-200 flex items-center justify-center gap-2 uppercase tracking-widest text-xs active:scale-95"
+            >
+              <Sparkles size={18} /> Generate Data
+            </button>
+            {generatedReport && (
+              <button 
+                onClick={handlePrint}
+                className="flex-1 sm:flex-none bg-green-500 text-white px-8 py-4 rounded-2xl font-black hover:bg-green-600 shadow-xl shadow-green-100 transition uppercase tracking-widest text-xs flex items-center justify-center gap-2 animate-in fade-in"
+              >
+                <Printer size={18} /> Cetak
+              </button>
             )}
           </div>
         </div>
-
-        <div className="flex gap-4">
-          <button 
-            onClick={handleGenerate}
-            className="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-100 transition uppercase tracking-widest flex items-center justify-center gap-3"
-          >
-            <Sparkles size={20} /> Generate Data
-          </button>
-          
-          {generatedReport && (
-            <button 
-              onClick={handlePrint}
-              className="flex-1 bg-green-500 text-white font-black py-4 rounded-2xl hover:bg-green-600 shadow-xl shadow-green-100 transition uppercase tracking-widest flex items-center justify-center gap-3 animate-in fade-in zoom-in duration-300"
-            >
-              <Printer size={20} /> Cetak Rekapitulasi
-            </button>
-          )}
-        </div>
       </div>
+
+      {/* Teacher Database Modal */}
+      {isTeacherDbModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-[32px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600 p-2 rounded-xl text-white">
+                  <Database size={20} />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Data Base Guru</h3>
+              </div>
+              <button 
+                onClick={() => {
+                  setIsTeacherDbModalOpen(false);
+                  setEditingTeacherId(null);
+                  setTeacherName('');
+                  setSchedule({ 1: true, 2: true, 3: true, 4: true, 5: true, 6: true });
+                }}
+                className="p-2 hover:bg-gray-100 rounded-xl transition text-gray-400"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+              <div className="bg-blue-50/50 p-6 rounded-3xl mb-8 border border-blue-100">
+                <h4 className="font-bold text-blue-900 mb-4">{editingTeacherId ? 'Edit Data Guru' : 'Tambah Guru Baru'}</h4>
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-black text-blue-800 uppercase tracking-widest mb-2">Nama Lengkap</label>
+                    <input 
+                      type="text" 
+                      placeholder="Nama Guru Lengkap..." 
+                      className="w-full bg-white border border-blue-100 rounded-2xl p-4 focus:ring-2 focus:ring-blue-600 outline-none transition font-bold"
+                      value={teacherName}
+                      onChange={(e) => setTeacherName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black text-blue-800 uppercase tracking-widest mb-3">Hari Kerja Aktif</label>
+                    <div className="flex flex-wrap gap-2">
+                      {['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'].map((day, idx) => (
+                        <label key={day} className={`flex-1 min-w-[80px] p-2 rounded-xl border cursor-pointer transition-all flex items-center justify-center gap-2 ${schedule[(idx + 1) as keyof typeof schedule] ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-blue-100 text-blue-600 hover:border-blue-300'}`}>
+                          <input 
+                            type="checkbox" 
+                            className="hidden" 
+                            checked={schedule[(idx + 1) as keyof typeof schedule]} 
+                            onChange={() => setSchedule({ ...schedule, [idx + 1]: !schedule[(idx + 1) as keyof typeof schedule] })} 
+                          />
+                          <span className="text-xs font-bold">{day}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={addOrUpdateTeacher}
+                      className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black hover:bg-blue-700 transition shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
+                    >
+                      {editingTeacherId ? 'Simpan Perubahan' : 'Simpan Data Guru'}
+                    </button>
+                    {editingTeacherId && (
+                      <button 
+                        onClick={() => {
+                          setEditingTeacherId(null);
+                          setTeacherName('');
+                          setSchedule({ 1: true, 2: true, 3: true, 4: true, 5: true, 6: true });
+                        }}
+                        className="px-6 py-4 rounded-2xl font-bold bg-gray-100 text-gray-500 hover:bg-gray-200 transition"
+                      >
+                        Batal
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Daftar Guru ({teachers.length})</h4>
+                {teachers.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <Users size={48} className="mx-auto text-gray-200 mb-4" />
+                    <p className="text-gray-400 font-medium italic">Belum ada guru yang terdaftar.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-3">
+                    {teachers.map(t => (
+                      <div key={t.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-blue-100 transition-all group">
+                        <div>
+                          <p className="font-bold text-gray-800">{t.name}</p>
+                          <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-wider">
+                            Jadwal: {t.schedule.map(d => ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'][d-1]).join(', ')}
+                          </p>
+                        </div>
+                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => startEditTeacher(t)}
+                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-xl transition"
+                            title="Edit"
+                          >
+                            <Settings size={18} />
+                          </button>
+                          <button 
+                            onClick={() => removeTeacher(t.id)}
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-xl transition"
+                            title="Hapus"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {generatedReport && (
         <div className="max-w-[calc(100vw-40px)] mx-auto overflow-x-auto no-print bg-white p-8 rounded-3xl shadow-sm border border-gray-100 mb-8 animate-in slide-in-from-top-4 duration-500 custom-scrollbar">
@@ -1634,7 +1748,7 @@ const App: React.FC = () => {
               showToast={showToast}
             />
           )}
-          {view === 'absen-finger' && <FingerprintView profile={profile} logs={logs} importedKaldik={importedKaldik} currentDate={currentDate} />}
+          {view === 'absen-finger' && <FingerprintView profile={profile} logs={logs} importedKaldik={importedKaldik} currentDate={currentDate} showToast={showToast} />}
           {view === 'settings' && SettingsView()}
         </div>
 
