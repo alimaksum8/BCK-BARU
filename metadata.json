@@ -1,0 +1,8 @@
+{
+  "name": "Remix: BCK Smart Log - Buku Catatan Kegiatan",
+  "description": "A digital activity log for teachers to manage daily teaching reports, track activities, and generate printable reports inspired by the BCK format.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": []
+}
