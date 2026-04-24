@@ -551,24 +551,65 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
 
       {isReportVisible && generatedReport && (
         <div className="hidden print:block" id="print-area">
-          <div className="border-none w-full">
-            <div className="print-header mb-8 w-full text-center">
-              <h2 className="text-xl font-bold uppercase tracking-tight text-center w-full">REKAPITULASI KEHADIRAN FINGERPRINT</h2>
-              <h3 className="text-lg font-semibold uppercase text-gray-700 text-center w-full">{generatedReport.madrasahName}</h3>
-              <p className="text-[10px] mt-2 italic text-center w-full">Bulan: <strong>{generatedReport.monthName} {generatedReport.year}</strong> | Jam Kerja: Datang &lt; 07:00:00, Pulang &lt; 13:00:00</p>
+          <div className="print-content-wrapper">
+            <div className="print-header">
+              <h2 className="title-main">REKAPITULASI KEHADIRAN FINGERPRINT</h2>
+              <h3 className="title-sub">{generatedReport.madrasahName}</h3>
+              <p className="title-desc">Bulan: <strong>{generatedReport.monthName} {generatedReport.year}</strong> | Jam Kerja: Datang &lt; 07:00:00, Pulang &lt; 13:00:00</p>
             </div>
 
             <style>{`
               @media print {
                 @page { size: landscape; margin: 0.5cm !important; }
                 body { margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact; }
-                #print-area { width: 100% !important; margin: 0 !important; padding: 0 !important; display: block !important; }
-                .print-header { display: block !important; width: 100% !important; margin-bottom: 20pt !important; text-align: center !important; }
-                .print-header h2, .print-header h3, .print-header p { 
-                  margin: 2pt 0 !important; 
+                #print-area { 
                   width: 100% !important; 
-                  text-align: center !important;
+                  margin: 0 !important; 
+                  padding: 0 !important; 
+                  display: block !important; 
+                  position: relative !important;
+                }
+                .print-content-wrapper { 
+                  width: 100% !important; 
+                  margin: 0 !important; 
+                  padding: 0 !important; 
                   display: block !important;
+                }
+                .print-header { 
+                  width: 100% !important; 
+                  margin: 0 0 25pt 0 !important; 
+                  text-align: center !important; 
+                  display: flex !important;
+                  flex-direction: column !important;
+                  align-items: center !important;
+                  justify-content: center !important;
+                }
+                .print-header h2.title-main { 
+                  font-size: 14pt !important; 
+                  font-weight: bold !important; 
+                  text-transform: uppercase !important;
+                  margin: 0 !important; 
+                  padding: 0 !important;
+                  width: 100% !important;
+                  text-align: center !important;
+                }
+                .print-header h3.title-sub { 
+                  font-size: 12pt !important; 
+                  font-weight: bold !important; 
+                  text-transform: uppercase !important;
+                  color: #374151 !important;
+                  margin: 2pt 0 !important; 
+                  padding: 0 !important;
+                  width: 100% !important;
+                  text-align: center !important;
+                }
+                .print-header p.title-desc { 
+                  font-size: 10pt !important; 
+                  font-style: italic !important;
+                  margin: 2pt 0 0 0 !important; 
+                  padding: 0 !important;
+                  width: 100% !important;
+                  text-align: center !important;
                 }
                 table { border-collapse: collapse; width: 100% !important; border: 1pt solid black !important; margin: 0 auto !important; table-layout: fixed; }
                 th, td { border: 0.5pt solid black !important; padding: 1px !important; font-size: 5pt !important; text-align: center; overflow: hidden; vertical-align: middle; white-space: nowrap; }
@@ -1397,7 +1438,7 @@ const App: React.FC = () => {
             </div>
           </div>
         )}
-        <div id="print-area" className="bg-white shadow-2xl rounded-sm p-4 sm:p-6 border border-gray-200 overflow-visible min-w-full print:p-0 print:shadow-none print:border-none">
+        <div id="bck-print-area" className="bg-white shadow-2xl rounded-sm p-4 sm:p-6 border border-gray-200 overflow-visible min-w-full print:p-0 print:shadow-none print:border-none">
           <div className="text-center font-bold text-xs mb-6 uppercase">
             BUKU CATATAN KINERJA (BCK) {type === 'guru' ? 'GURU' : 'KEPALA'}<br />
             BULAN {currentDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
