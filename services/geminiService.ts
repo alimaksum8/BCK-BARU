@@ -2,25 +2,31 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 export const suggestActivities = async (jabatan: string, schoolType: string) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: `Suggest 5 common daily activities for a teacher with position "${jabatan}" at a "${schoolType}". Return the response in a structured JSON array of strings in Indonesian.`,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.ARRAY,
-        items: { type: Type.STRING }
-      }
-    }
-  });
+  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!apiKey) {
+    console.error("Gemini API Key is missing");
+    throw new Error("API Key configuration error");
+  }
 
+  const ai = new GoogleGenAI({ apiKey });
   try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Suggest 5 common daily activities for a teacher with position "${jabatan}" at a "${schoolType}". Return the response in a structured JSON array of strings in Indonesian.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        }
+      }
+    });
+
     const text = response.text;
     return text ? JSON.parse(text) : [];
   } catch (e) {
-    console.error("Failed to parse AI response", e);
-    return [];
+    console.error("Failed to get suggestion from AI", e);
+    throw e;
   }
 };
 
@@ -31,7 +37,13 @@ export interface ScanInput {
 }
 
 export const scanCalendar = async (input: ScanInput) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!apiKey) {
+    console.error("Gemini API Key is missing");
+    throw new Error("API Key configuration error");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   
   const parts: any[] = [];
   
@@ -49,6 +61,10 @@ export const scanCalendar = async (input: ScanInput) => {
       text: `Data teks dari file Excel/Dokumen: \n${input.extractedText}`,
     });
   }
+  
+  if (parts.length === 0) {
+    throw new Error("No input data provided for scanning");
+  }
 
   parts.push({
     text: `Analisis data kalender pendidikan ini. Ekstrak daftar hari libur dan kegiatan penting. 
@@ -58,40 +74,52 @@ export const scanCalendar = async (input: ScanInput) => {
            Pastikan format tanggal adalah YYYY-MM-DD.`,
   });
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: { parts },
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            date: { type: Type.STRING },
-            name: { type: Type.STRING },
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: { parts },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              date: { type: Type.STRING },
+              name: { type: Type.STRING },
+            },
+            required: ["date", "name"],
           },
-          required: ["date", "name"],
         },
       },
-    },
-  });
+    });
 
-  try {
     const text = response.text;
-    return text ? JSON.parse(text) : null;
+    if (!text) return [];
+    return JSON.parse(text);
   } catch (e) {
-    console.error("Failed to parse calendar scan", e);
-    return null;
+    console.error("Failed to scan calendar with AI", e);
+    throw e;
   }
 };
 
 export const refineActivity = async (draft: string) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: `Perbaiki dan buat kalimat yang lebih profesional untuk catatan kegiatan harian guru berikut: "${draft}". Gunakan bahasa Indonesia yang formal. Balas hanya dengan kalimat hasil perbaikan.`,
-  });
+  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!apiKey) {
+    console.error("Gemini API Key is missing");
+    return draft;
+  }
 
-  return response.text?.trim() || draft;
+  const ai = new GoogleGenAI({ apiKey });
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Perbaiki dan buat kalimat yang lebih profesional untuk catatan kegiatan harian guru berikut: "${draft}". Gunakan bahasa Indonesia yang formal. Balas hanya dengan kalimat hasil perbaikan.`,
+    });
+
+    return response.text?.trim() || draft;
+  } catch (e) {
+    console.error("Failed to refine activity", e);
+    return draft;
+  }
 };

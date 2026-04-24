@@ -1193,19 +1193,26 @@ const App: React.FC = () => {
 
     try {
       if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.name.endsWith('.xlsx')) {
-        const result = await readFile(file, 'array');
-        if (result) {
+        let csvText = '';
+        try {
+          const result = await readFile(file, 'array');
+          if (!result) throw new Error("File empty or unreadable");
           const data = new Uint8Array(result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: 'array' });
-          const csvText = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]]);
-          const results = await scanCalendar({ extractedText: csvText });
-          if (results && results.length > 0) {
-            const sorted = results.sort((a: any, b: any) => a.date.localeCompare(b.date));
-            setImportedKaldik(sorted);
-            showToast("Kaldik diimpor", "success");
-          } else {
-            showToast("Tidak ada data kaldik ditemukan", "error");
-          }
+          csvText = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]]);
+        } catch (excelErr) {
+          console.error("Excel processing error:", excelErr);
+          showToast("Gagal membaca file Excel", "error");
+          return;
+        }
+
+        const results = await scanCalendar({ extractedText: csvText });
+        if (results && results.length > 0) {
+          const sorted = results.sort((a: any, b: any) => a.date.localeCompare(b.date));
+          setImportedKaldik(sorted);
+          showToast("Kaldik diimpor", "success");
+        } else {
+          showToast("Tidak ada data kaldik ditemukan", "error");
         }
       } else {
         const result = await readFile(file, 'dataurl');
@@ -1221,9 +1228,12 @@ const App: React.FC = () => {
           }
         }
       }
-    } catch (err) { 
+    } catch (err: any) { 
       console.error("Error processing file:", err);
-      showToast("Gagal memproses file", "error");
+      const msg = err.message?.includes("API Key") 
+        ? "Konfigurasi AI (API Key) belum diset" 
+        : "Gagal memproses file dengan AI";
+      showToast(msg, "error");
     } finally {
       setIsScanning(false); 
       if (event.target) event.target.value = ''; // Reset input to allow re-upload of same file
