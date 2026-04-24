@@ -552,20 +552,25 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
       {isReportVisible && generatedReport && (
         <div className="hidden print:block" id="print-area">
           <div className="border-none w-full">
-            <div className="print-header mb-8">
-              <h2 className="text-xl font-bold uppercase tracking-tight">REKAPITULASI KEHADIRAN FINGERPRINT</h2>
-              <h3 className="text-lg font-semibold uppercase text-gray-700">{generatedReport.madrasahName}</h3>
-              <p className="text-[10px] mt-2 italic">Bulan: <strong>{generatedReport.monthName} {generatedReport.year}</strong> | Jam Kerja: Datang &lt; 07:00:00, Pulang &lt; 13:00:00</p>
+            <div className="print-header mb-8 w-full text-center">
+              <h2 className="text-xl font-bold uppercase tracking-tight text-center w-full">REKAPITULASI KEHADIRAN FINGERPRINT</h2>
+              <h3 className="text-lg font-semibold uppercase text-gray-700 text-center w-full">{generatedReport.madrasahName}</h3>
+              <p className="text-[10px] mt-2 italic text-center w-full">Bulan: <strong>{generatedReport.monthName} {generatedReport.year}</strong> | Jam Kerja: Datang &lt; 07:00:00, Pulang &lt; 13:00:00</p>
             </div>
 
             <style>{`
               @media print {
                 @page { size: landscape; margin: 0.5cm !important; }
-                body { margin: 0 !important; padding: 0 !important; }
-                #print-area { width: 100% !important; margin: 0 !important; padding: 0 !important; }
-                .print-header { text-align: center !important; width: 100% !important; display: block !important; }
-                .print-header h2, .print-header h3, .print-header p { text-align: center !important; width: 100% !important; margin: 2px 0 !important; }
-                table { border-collapse: collapse; width: 100% !important; table-layout: fixed; border: 1pt solid black !important; margin: 0 !important; }
+                body { margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact; }
+                #print-area { width: 100% !important; margin: 0 !important; padding: 0 !important; display: block !important; }
+                .print-header { display: block !important; width: 100% !important; margin-bottom: 20pt !important; text-align: center !important; }
+                .print-header h2, .print-header h3, .print-header p { 
+                  margin: 2pt 0 !important; 
+                  width: 100% !important; 
+                  text-align: center !important;
+                  display: block !important;
+                }
+                table { border-collapse: collapse; width: 100% !important; border: 1pt solid black !important; margin: 0 auto !important; table-layout: fixed; }
                 th, td { border: 0.5pt solid black !important; padding: 1px !important; font-size: 5pt !important; text-align: center; overflow: hidden; vertical-align: middle; white-space: nowrap; }
                 th { background-color: #f3f4f6 !important; font-weight: bold; -webkit-print-color-adjust: exact; }
                 .bg-sunday { background-color: #fee2e2 !important; color: #dc2626 !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
