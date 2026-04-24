@@ -553,7 +553,7 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
         <div className="hidden print:block" id="print-area">
           <div className="border-none w-full">
             <div className="print-header flex flex-col items-center justify-center w-full">
-              <h2 className="text-xl font-bold uppercase tracking-tight text-center">REKAPITULASI KEHADIRAN FINGERPRINT</h2>
+              <h2 className="text-xl font-bold uppercase tracking-tight text-center whitespace-nowrap">REKAPITULASI KEHADIRAN FINGERPRINT</h2>
               <h3 className="text-lg font-semibold uppercase text-gray-700 text-center">{generatedReport.madrasahName}</h3>
               <p className="text-[10px] mt-2 italic text-center">Bulan: <strong>{generatedReport.monthName} {generatedReport.year}</strong> | Jam Kerja: Datang &lt; 07:00:00, Pulang &lt; 13:00:00</p>
             </div>
@@ -580,6 +580,7 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
                   max-width: 100% !important;
                   text-align: center !important;
                   display: block !important;
+                  white-space: nowrap !important;
                 }
                 table { border-collapse: collapse; width: 100% !important; border: 1pt solid black !important; margin: 0 auto !important; table-layout: fixed; }
                 th, td { border: 0.5pt solid black !important; padding: 1px !important; font-size: 5pt !important; text-align: center; overflow: hidden; vertical-align: middle; white-space: nowrap; }
