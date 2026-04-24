@@ -560,7 +560,7 @@ const FingerprintView: React.FC<{ profile: Profile, logs: MonthlyLog[], imported
 
             <style>{`
               @media print {
-                @page { size: auto; margin: 0.5cm !important; }
+                @page { size: landscape; margin: 0.5cm !important; }
                 body { margin: 0 !important; padding: 0 !important; }
                 #print-area { width: 100% !important; margin: 0 !important; padding: 0 !important; }
                 table { border-collapse: collapse; width: 100% !important; table-layout: fixed; border: 1pt solid black !important; margin: 0 !important; }
